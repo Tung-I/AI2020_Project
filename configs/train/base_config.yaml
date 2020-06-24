@@ -1,0 +1,86 @@
+main:
+    random_seed: '2021'
+    saved_dir: '/home/tony/AI2020_Project/models/no_extra_with_pretrain_large_lr/train'
+
+dataset:
+    name: 'BiDataset'
+    kwargs:
+        data_dir: '/home/tony/datasets/Covid-all/images'
+        data_split_csv: '/home/tony/datasets/Covid-all/697_116.csv'
+        use_extra: False
+        extra_data_dir: '/home/tony/datasets/Covid-all/luna'
+        extra_data_split_csv: '/home/tony/datasets/Covid-all/luna_1000_50.csv'
+        train_preprocessings:
+            - name: 'RandomCrop'
+              kwargs:
+                  size: [256, 256]
+        valid_preprocessings:
+            # - name: 'RandomCrop'
+            #   kwargs:
+            #       size: [320, 320]
+        transforms:
+            # - name: 'NonLinearTransform'
+            #   kwargs:
+            #       prob: 0.5
+            # - name: 'LocalPixelShuffling'
+            #   kwargs:
+            #       prob: 0.5
+            # - name: 'Painting'
+            #   kwargs:
+            #       prob: 0.5
+            #       inpaint_rate: 0.5
+        to_tensor:
+            - name: 'ToTensor'
+            
+dataloader:
+    name: 'Dataloader'
+    kwargs:
+        train:
+            batch_size: 24
+        valid:
+            batch_size: 1
+        shuffle: true
+        num_workers: 8
+
+net:
+    name: 'UNet2D'
+    kwargs:
+        in_channels: 1
+        num_classes: 2
+        num_features: [32, 64, 128, 256, 512]
+        pretrained: True
+        model_path: /home/tony/AI2020_Project/models/mg2d/train/checkpoints/model_250.pth
+
+losses:
+    - name: 'CrossEntropyLossWrapper'
+      weight: 1.0
+
+metrics:
+    - name: 'Accuracy'
+    - name: 'F1Score'
+
+optimizer:
+    name: 'SGD'
+    kwargs:
+        lr: 0.01
+        weight_decay: 0
+        # amsgrad: false
+
+logger:
+    name: 'Task1Logger'
+    kwargs:
+        dummy_input: [16, 1, 128, 128]
+
+monitor:
+    name: 'Monitor'
+    kwargs:
+        mode: 'max'
+        target: 'F1Score'
+        saved_freq: 10
+        early_stop: 0
+
+trainer:
+    name: 'Task1Trainer'
+    kwargs:
+        device: 'cuda:0'
+        num_epochs: 50
